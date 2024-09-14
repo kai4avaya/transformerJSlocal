@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local BERT-tiny Embedding Demo with WebGL</title>
+</head>
+<body>
+    <h1>Local BERT-tiny Embedding Demo with WebGL</h1>
+    <textarea id="input-text" rows="4" cols="50">Enter text here to analyze...</textarea>
+    <br>
+    <button id="process-button">Process Text</button>
+    <div id="output"></div>
+
+    <script type="module">
+        import * as transformers from '/transformers/package/dist/transformers.js';
+
+        // Configure the environment to use WebGL
+        transformers.env.backends.onnx.wasm.wasmPaths = '/transformers/package/dist/';
+        transformers.env.backends.onnx.wasm.numThreads = 1;
+        // transformers.env.useFsBackend = false;
+
+        // Set the path to your local models
+        transformers.env.localModelPath = '/models/bert-tiny/';
+
+        transformers.env.allowRemoteModels = false;
+
+        // Initialize the pipeline
+        let extractor;
+        async function initializePipeline() {
+            try {
+                extractor = await transformers.pipeline('feature-extraction', 'Xenova/bert-tiny', {
+                    quantized: true,
+                    revision: 'default',
+                    backend: 'webgl'
+                });
+                console.log('Pipeline initialized with WebGL');
+            } catch (error) {
+                console.error('Error initializing pipeline:', error);
+            }
+        }
+
+        // Function to create embeddings
+        async function createEmbeddings(texts) {
+            try {
+                const output = await extractor(texts, { 
+                    pooling: 'mean', 
+                    normalize: true
+                });
+                console.log('Embeddings created:', output);
+                return Array.isArray(output) ? output.map(tensor => Array.from(tensor.data)) : [Array.from(output.data)];
+            } catch (error) {
+                console.error('Error creating embeddings:', error);
+                throw error;
+            }
+        }
+
+        // Function to compute cosine similarity
+        function cosineSimilarity(vecA, vecB) {
+            const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+            const magnitudeA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+            const magnitudeB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+            return dotProduct / (magnitudeA * magnitudeB);
+        }
+
+        // Function to process the input text
+        async function processText() {
+            const inputText = document.getElementById('input-text').value;
+            const outputDiv = document.getElementById('output');
+            outputDiv.innerHTML = 'Processing...';
+            console.log('Processing text:', inputText);
+
+            try {
+                const embedding = await createEmbeddings([inputText]);
+                outputDiv.innerHTML = `Embedding created successfully. Shape: [${embedding[0].length}]<br>
+                                       First few values: ${embedding[0].slice(0, 5).join(', ')}...`;
+                console.log('Embedding:', embedding);
+            } catch (error) {
+                outputDiv.innerHTML = `Error: ${error.message}`;
+                console.error('Error processing text:', error);
+            }
+        }
+
+        // Initialize the pipeline when the page loads
+        initializePipeline();
+
+        // Add event listener to the button
+        document.getElementById('process-button').addEventListener('click', processText);
+    </script>
+</body>
+</html>

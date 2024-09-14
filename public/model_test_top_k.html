@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local BERT-tiny Embedding Demo with WebGL and Web Worker</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        textarea, input, button { margin: 10px 0; }
+        #output, #search-results { margin-top: 20px; }
+        #progress-container { 
+            width: 100%; 
+            background-color: #f0f0f0; 
+            margin-top: 10px; 
+            display: none;
+        }
+        #progress-bar {
+            width: 0%; 
+            height: 20px; 
+            background-color: #4CAF50; 
+            text-align: center; 
+            line-height: 20px; 
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Local BERT-tiny Embedding Demo with WebGL and Web Worker</h1>
+    <textarea id="input-text" rows="4" cols="50">Enter text here to analyze...</textarea>
+    <br>
+    <button id="process-button">Process Text</button>
+    <div id="progress-container">
+        <div id="progress-bar">0%</div>
+    </div>
+    <div id="output"></div>
+
+    <div id="search-section" style="display:none;">
+        <h2>Search Embeddings</h2>
+        <input type="text" id="search-query" placeholder="Enter search query">
+        <input type="number" id="top-k" value="5" min="1" max="20">
+        <button id="search-button">Search</button>
+        <div id="search-results"></div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+</body>
+</html>
